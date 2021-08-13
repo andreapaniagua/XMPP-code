@@ -38,3 +38,14 @@ Puede utilizar librerías que faciliten la comunicación con el protocolo XMPP, 
 El dominio del servidor es
 
 ### alumchat.xyz
+
+## Instrucciones para correr proyecto
+-Descargar codigo de este repositorio
+-pip install asyncio
+-pip install logging
+-pip install slixmpp
+-pip install sys
+-pip install getpass
+-pip install nest_asyncio
+
+-ejecutar Proyecto1.py
