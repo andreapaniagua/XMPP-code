@@ -1,18 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #Andrea Paniagua
 #carne 18733
 #codigo consultado: https://github.com/poezio/slixmpp
 import asyncio
 import logging
+import slixmpp
 from slixmpp import ClientXMPP
 from slixmpp.exceptions import IqError, IqTimeout
 import sys
 import getpass
-
+import nest_asyncio
+nest_asyncio.apply()
 
 #permite evitar el error de loop y permite al sys poder detectar la plataforma que esta siendo usada pra ejecutar  los DNDs
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 #clase encargada de registrar a los usuarios en el server
+
 class RegisterBot(slixmpp.ClientXMPP):
 
     def __init__(self, jid, password):
@@ -21,14 +26,15 @@ class RegisterBot(slixmpp.ClientXMPP):
         self.add_event_handler("session_start", self.start)
         self.add_event_handler("register", self.register)
     #funcion principal que hace trigger al evento llamado  por process
-    async def start(self, event):
 
+    async def start(self, event):
         self.send_presence()
         await self.get_roster()
         self.disconnect()
-    #aregistrar usuarios
+        
+    #registrar usuarios clase tomada del codigo de ejemplos
     async def register(self, iq):
-        #aqui se creo el iq para mandar al nuevo usuario que sera ingresado al server
+        #mandar al nuevo usuario que sera ingresado al server
         resp = self.Iq()
         resp['type'] = 'set'
         resp['register']['username'] = self.boundjid.user
@@ -41,7 +47,6 @@ class RegisterBot(slixmpp.ClientXMPP):
             # mensaje de error
             print("Could not register account: %s" %
                     e.iq['error']['text'])
-            self.disconnect()
         except IqTimeout:
             #esto ocurrira en caso el server no este levantado
             print("No response from server")
@@ -101,9 +106,10 @@ class Client(slixmpp.ClientXMPP):
         self.send_presence()
         access = True
         print('connected\n')
-        print("login done\n")
+        print("login  correcto\n")
+        print("")
         while access:
-            print("elija una de las siguientes opciones: \n1. Mostrar todos los usuarios y su estado \n2. Agregar un usuario a sus contactos \n3. Mostrar detalles de contacto de un usuario \n4. Comunicacion 1 a 1 con algun usuario \n5. participar en conversacion grupal \n6. mensaje de precencia \n7. salir ")
+            print("Menu de funciones: \n1. Mostrar todos los usuarios y su estado \n2. Agregar un usuario a contactos \n3. Mostrar detalles de un usuario \n4. Comunicacion 1 a 1 \n5. Conversacion grupal \n6. Mensaje de presencia \n7. Salir ")
             opcion = input("opcion a elegir es: ")
             if opcion == "1":
                 try:
@@ -141,42 +147,42 @@ class Client(slixmpp.ClientXMPP):
 
             if opcion == "2":
                 new_friend = (input("user: "))
-                xmpp.send_presence_subscription(pto= new_friend + "@redes2020.xyz")
-                print("Amigo agregado")
+                xmpp.send_presence_subscription(pto= new_friend + "@alumchat.xyz")
+                print("Usuario agregado")
                 #print("2")
             if opcion == "3":
                 #codigo para mostrar detalles de un contanto
-                print("ingrese el nombre sel usuario de quien quiere saber su estatus\n")
+                print("Usuario de quien quiere saber su estatus\n")
                 #obtenemos el usario a detallar
                 userSt =  input("nombre del usuario: ")
-                userSt = userSt + "redes2020.xyz"
+                userSt = userSt + "@alumchat.xyz"
                 self.send_presence()
-                #se procura obtener el roster del cliente para luego mostra los detalles del user
+                #roster del cliente para luego mostra los detalles del user
                 await self.get_roster()
                 self.client_roster
-                print("Aqui esta: ", self.client_roster.presence(userSt))
+                print("etalles: ", self.client_roster.presence(userSt))
                 print("3")
             if opcion == "4":
                 #codigo para enviar un mensaje 1 a 1 con otro usuario
-                Userto = input("ingrese el nombre el usuario a quien va dirigido el mensaje: ")
-                mensaje = input("ingrese el mensaje que desea enviar: ")
+                Userto = input("Usuario al que va dirigido el mensaje: ")
+                mensaje = input("Mensaje: ")
                 self.send_message(mto= UserTo + "@alumchat.xyz",
                           mbody= mensaje,
                           mtype='chat')
                 print("4")
             if opcion == "5":
-                #codigo para añadirme a un chat grupal y enviar un mensaje
-                print("vamos a ingresar a un room\n")
-                self.nick = input("ingrese el nombre con le que quiere aparecer en el room: ")
+                #añador a chat grupal y enviar un mensaje
+                print("Ingresar a un room\n")
+                self.nick = input("Nombre para aparecer en el room: ")
                 self.room = self.nick + "@alumchat.xyz"
-                #agregamos un eventhandler para manejar el room y quienes ingresan
+                #eventhandler para manejar el room y quienes ingresan
                 self.add_event_handler("muc::%s::got_online" % self.room,self.muc_online)
                 await self.get_roster()
                 self.send_presence()
                 self.plugin['xep_0045'].join_muc(self.room,
                                          self.nick,
                                          wait=True)
-                mensaje = input("mensaje a enviar: ")
+                mensaje = input("Mensajer: ")
                 self.muc_message(mensaje)
 
                 print("5")
@@ -189,7 +195,7 @@ class Client(slixmpp.ClientXMPP):
             if opcion == "7":
                 access = False
                 print("entraste")
-                sys.exit("Se ha desconectado")
+                sys.exit("Desconectado")
                 break
         print("saliste")
         self.disconnect()
@@ -199,9 +205,9 @@ class Client(slixmpp.ClientXMPP):
 
 if __name__ == '__main__':
     st_log = False
-    print("todos los mensajes que pidan el nick o user, requieren solo el nombre. el programa agregara el @alumchat.xyz")
+    print("Los mensajes que requieran usuario, requieren solo el nombre. el programa agregara el @alumchat.xyz")
     while st_log == False:
-        print("Bienvenido al chat basado en XMPP \n Por favor elija alguna de las siguientes opcions para empezar: \n 1 - Iniciar sesion \n 2 - Registrarse \n 3 - salir del chat\n")
+        print("Bienvenido al Proyecto 1 de chat con protocolo XMPP \n 1 - Iniciar sesion \n 2 - Registrarse \n 3 - Salir del chat\n")
         eleccion = input("opcion: ")
         if eleccion == "1":
             jid = input("Username: ")
@@ -229,4 +235,4 @@ if __name__ == '__main__':
         if eleccion == '3':
             st_log = True
         if eleccion != '1' or eleccion != '2' or eleccion != '3':
-            print("Solo elija el numero de las opciones\n")
+            print("Intente de nuevo\n")
