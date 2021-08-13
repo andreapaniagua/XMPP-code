@@ -160,7 +160,7 @@ class Client(slixmpp.ClientXMPP):
                 #roster del cliente para luego mostra los detalles del user
                 await self.get_roster()
                 self.client_roster
-                print("etalles: ", self.client_roster.presence(userSt))
+                print("Detalles: ", self.client_roster.presence(userSt))
                 print("3")
             if opcion == "4":
                 #codigo para enviar un mensaje 1 a 1 con otro usuario
